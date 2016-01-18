@@ -36,8 +36,7 @@ public class PushEventNotificationCause extends Cause {
 
     @Override
     public String getShortDescription() {
-        return String.format("Triggered by push of <a href=\"%s\">%s</a> to Quay.io",
-                notification.getHomepage(), notification.getRepository());
+        return String.format("Triggered by push of %s to Quay.io", notification.getRepository());
     }
 
     @Extension
