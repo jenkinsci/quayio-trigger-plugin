@@ -19,6 +19,7 @@ import hudson.Extension;
 import hudson.model.*;
 import hudson.model.Queue;
 import hudson.security.ACL;
+import hudson.security.csrf.CrumbExclusion;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import net.sf.json.JSONObject;
@@ -29,6 +30,10 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.kohsuke.stapler.interceptor.RespondSuccess;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
@@ -38,12 +43,12 @@ import java.util.logging.Logger;
  * Created by sirot on 17/01/2016.
  */
 @Extension
-public class QuayIoWebHook implements UnprotectedRootAction {
+public class QuayIoWebHook extends CrumbExclusion implements UnprotectedRootAction {
 
     /**
      * The namespace under Jenkins context path that this Action is bound to.
      */
-    public static final String URL_NAME = "quayio-webhook";
+    public static final String URL_PATH = "quayio-webhook";
 
     private static final int MIN_QUIET = 3;
 
@@ -61,7 +66,7 @@ public class QuayIoWebHook implements UnprotectedRootAction {
 
     @Override
     public String getUrlName() {
-        return URL_NAME;
+        return URL_PATH;
     }
 
     @RequirePOST
@@ -128,6 +133,16 @@ public class QuayIoWebHook implements UnprotectedRootAction {
         job.scheduleBuild2(quiet, queueActions.toArray(new Action[2]));
 
         logger.info("Scheduled job " + job.asJob().getName() + " as Docker image " + notification.getRepository() + " has been pushed with tags " + StringUtils.join(notification.getTags(), ", "));
+    }
+
+    @Override
+    public boolean process(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+        String pathInfo = request.getPathInfo();
+        if (pathInfo != null && pathInfo.startsWith("/" + URL_PATH)) {
+            chain.doFilter(request, response);
+            return true;
+        }
+        return false;
     }
 
 
