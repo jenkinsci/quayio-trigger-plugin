@@ -68,7 +68,7 @@ public class QuayIoWebHook implements UnprotectedRootAction {
 
     @RequirePOST
     @RespondSuccess
-    public void doNotify(StaplerRequest request, StaplerResponse response) throws IOException {
+    public void doPush(StaplerRequest request, StaplerResponse response) throws IOException {
         PushEventNotification notification;
         String body = IOUtils.toString(request.getInputStream(), request.getCharacterEncoding());
         try {
