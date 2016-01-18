@@ -15,8 +15,6 @@
  */
 package org.jenkinsci.plugins.quayio.notification;
 
-import static org.assertj.core.api.Assertions.*;
-
 import com.google.common.io.Resources;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
@@ -26,11 +24,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockBuilder;
-import org.jvnet.hudson.test.recipes.WithPlugin;
 
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class QuayIoWebHookTest {
 
