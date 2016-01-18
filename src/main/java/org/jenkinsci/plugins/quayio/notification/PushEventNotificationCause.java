@@ -15,7 +15,11 @@
  */
 package org.jenkinsci.plugins.quayio.notification;
 
+import hudson.Extension;
+import hudson.Functions;
 import hudson.model.Cause;
+import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.buildtriggerbadge.provider.BuildTriggerBadgeProvider;
 
 /**
  * Created by sirot on 17/01/2016.
@@ -35,5 +39,16 @@ public class PushEventNotificationCause extends Cause {
     @Override
     public String getShortDescription() {
         return String.format("Triggered by push of %s to Quay.io", notification.getRepository());
+    }
+
+    @Extension
+    public static class QuayIoTriggerBadgeProvider extends BuildTriggerBadgeProvider {
+        @Override
+        public String provideIcon(Cause cause) {
+            if (cause instanceof PushEventNotificationCause) {
+                return Functions.getResourcePath() + "plugin/quayio-notification/images/quay.png";
+            }
+            return null;
+        }
     }
 }

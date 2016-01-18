@@ -23,6 +23,7 @@ import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -38,9 +39,6 @@ import java.util.logging.Logger;
  */
 @Extension
 public class QuayIoWebHook implements UnprotectedRootAction {
-
-    public static final String PREFIX = "QUAY_IO_TRIGGER_";
-    public static final String KEY_REPOSITORY = PREFIX + "REPOSITORY";
 
     /**
      * The namespace under Jenkins context path that this Action is bound to.
@@ -76,6 +74,7 @@ public class QuayIoWebHook implements UnprotectedRootAction {
             notification = new PushEventNotification(payload);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not parse the web hook payload!", e);
+            logger.log(Level.FINER, "Payload content: " + body);
             return;
         }
         if (notification != null) {
@@ -95,7 +94,7 @@ public class QuayIoWebHook implements UnprotectedRootAction {
                 for (ParameterizedJobMixIn.ParameterizedJob p : jenkins.getAllItems(ParameterizedJobMixIn.ParameterizedJob.class)) {
                     QuayIoTrigger trigger = QuayIoTrigger.getTrigger(p);
                     if (trigger == null) {
-                        logger.log(Level.FINER, "job {0} doesn't have DockerHubTrigger set", p.getName());
+                        logger.log(Level.FINER, "job {0} doesn't have QuayIoTrigger set", p.getName());
                         continue;
                     }
                     logger.log(Level.FINER, "Inspecting candidate job {0}", p.getName());
@@ -111,9 +110,9 @@ public class QuayIoWebHook implements UnprotectedRootAction {
         if (!job.asJob().isBuildable()) {
             return;
         }
-        ParameterValue param = new StringParameterValue(KEY_REPOSITORY, notification.getRepository());
-        //List<ParameterValue> parameters = getParameterValues(notification);
-        List<ParameterValue> parameters = Arrays.asList(param);
+        //ParameterValue param = new StringParameterValue(KEY_REPOSITORY, notification.getRepository());
+        List<ParameterValue> parameters = job.getParameterValues(notification);
+        //List<ParameterValue> parameters = Arrays.asList(params);
         List<Action> queueActions = new LinkedList<Action>();
 
         queueActions.add(new ParametersAction(parameters));
@@ -128,47 +127,15 @@ public class QuayIoWebHook implements UnprotectedRootAction {
         }
         job.scheduleBuild2(quiet, queueActions.toArray(new Action[2]));
 
-        logger.info("Scheduled job " + job.asJob().getName() + " as Docker image " + notification.getRepository() + " has been pushed");
+        logger.info("Scheduled job " + job.asJob().getName() + " as Docker image " + notification.getRepository() + " has been pushed with tags " + StringUtils.join(notification.getTags(), ", "));
     }
 
-//    private List<ParameterValue> getParameterValues(Job job, PushEventNotification notification) {
-//        List<ParameterValue> parameters = new LinkedList<ParameterValue>();
-//        if (job.isParameterized()) {
-//            Collection<ParameterValue> defaults = getDefaultParametersValues(job);
-//            for (ParameterValue value : defaults) {
-//                if (!value.getName().equalsIgnoreCase(KEY_REPOSITORY) && !value.getName().equalsIgnoreCase(KEY_DOCKER_HUB_HOST)) {
-//                    parameters.add(value);
-//                }
-//            }
-//        }
-//        parameters.add(new StringParameterValue(KEY_REPOSITORY, notification.getRepository()));
-//        return parameters;
-//    }
-
-//    /**
-//     * Direct copy from {@link ParameterizedJobMixIn#getDefaultParametersValues()} (version 1.580).
-//     *
-//     * @return the configured parameters with their default values.
-//     */
-//    private List<ParameterValue> getDefaultParametersValues(Job job) {
-//        JobProperty paramDefProp = job.getProperty(ParametersDefinitionProperty.class);
-//        ArrayList<ParameterValue> defValues = new ArrayList<ParameterValue>();
-//
-//        if (paramDefProp == null)
-//            return defValues;
-//
-//        /* Scan for all parameter with an associated default values */
-//        for (ParameterDefinition paramDefinition : ((ParametersDefinitionProperty)paramDefProp).getParameterDefinitions()) {
-//            ParameterValue defaultValue = paramDefinition.getDefaultParameterValue();
-//
-//            if (defaultValue != null)
-//                defValues.add(defaultValue);
-//        }
-//
-//        return defValues;
-//    }
 
     static class JobMixInWrapper<JobT extends Job<JobT, RunT> & ParameterizedJobMixIn.ParameterizedJob & Queue.Task, RunT extends Run<JobT, RunT> & Queue.Executable> extends ParameterizedJobMixIn<JobT, RunT> {
+
+        public static final String PREFIX = "QUAY_IO_TRIGGER_";
+        public static final String KEY_REPOSITORY = PREFIX + "REPOSITORY";
+        public static final String KEY_TAG = PREFIX + "TAG";
 
         private final JobT job;
 
@@ -180,5 +147,41 @@ public class QuayIoWebHook implements UnprotectedRootAction {
         protected JobT asJob() {
             return job;
         }
+
+        public List<ParameterValue> getParameterValues(PushEventNotification notification) {
+            List<ParameterValue> parameters = new LinkedList<ParameterValue>();
+            if (isParameterized()) {
+                Collection<ParameterValue> defaults = getDefaultParametersValues();
+                for (ParameterValue value : defaults) {
+                    if (!value.getName().equalsIgnoreCase(KEY_REPOSITORY) && !value.getName().equalsIgnoreCase(KEY_TAG)) {
+                        parameters.add(value);
+                    }
+                }
+            }
+            parameters.add(new StringParameterValue(KEY_REPOSITORY, notification.getRepository()));
+            if (!notification.getTags().isEmpty()) {
+                parameters.add(new StringParameterValue(KEY_TAG, notification.getTags().get(0)));
+            }
+            return parameters;
+        }
+
+        public List<ParameterValue> getDefaultParametersValues() {
+            ParametersDefinitionProperty paramDefProp = asJob().getProperty(ParametersDefinitionProperty.class);
+            ArrayList<ParameterValue> defValues = new ArrayList<ParameterValue>();
+
+            if (paramDefProp == null)
+                return defValues;
+
+            /* Scan for all parameter with an associated default values */
+            for (ParameterDefinition paramDefinition : ((ParametersDefinitionProperty)paramDefProp).getParameterDefinitions()) {
+                ParameterValue defaultValue = paramDefinition.getDefaultParameterValue();
+
+                if (defaultValue != null)
+                    defValues.add(defaultValue);
+            }
+
+            return defValues;
+        }
+
     }
 }

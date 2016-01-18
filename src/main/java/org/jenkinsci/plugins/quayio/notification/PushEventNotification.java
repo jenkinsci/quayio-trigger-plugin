@@ -15,7 +15,13 @@
  */
 package org.jenkinsci.plugins.quayio.notification;
 
+import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by sirot on 17/01/2016.
@@ -24,11 +30,23 @@ public class PushEventNotification {
 
     private final JSONObject payload;
     private final String repository;
+    private final List<String> tags = new ArrayList<String>();
     private final long received;
 
     public PushEventNotification(JSONObject payload) {
         this.payload = payload;
         this.repository = payload.getString("repository");
+        Iterator<String> it;
+        try {
+            it = payload.getJSONObject("updated_tags").keys();
+        } catch (JSONException je) {
+            /* updated_tags is not an objet, it may be an array */
+            it = payload.getJSONArray("updated_tags").iterator();
+        }
+        while (it.hasNext()) {
+            String key = it.next();
+            this.tags.add(key);
+        }
         this.received = System.currentTimeMillis();
     }
 
@@ -42,5 +60,9 @@ public class PushEventNotification {
 
     public String getRepository() {
         return repository;
+    }
+
+    public List<String> getTags() {
+        return tags;
     }
 }

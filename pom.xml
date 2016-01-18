@@ -36,6 +36,15 @@
     </pluginRepository>
   </pluginRepositories>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>buildtriggerbadge</artifactId>
+      <version>${buildtriggerbadge.version}</version>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+
   <build>
     <pluginManagement>
       <plugins>
@@ -71,6 +80,7 @@
     <maven-compiler-plugin.version>3.2</maven-compiler-plugin.version>
     <maven-resources-plugin.version>2.6</maven-resources-plugin.version>
     <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
+    <buildtriggerbadge.version>2.2</buildtriggerbadge.version>
   </properties>
 
 </project>
