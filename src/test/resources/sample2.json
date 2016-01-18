@@ -1,0 +1,15 @@
+{
+  "repository": "mynamespace/repository",
+  "namespace": "mynamespace",
+  "name": "repository",
+  "docker_url": "quay.io/mynamespace/repository",
+  "homepage": "https://quay.io/repository/mynamespace/repository",
+  "visibility": "private",
+
+  "updated_tags": [
+    "latest",
+    "v1.7"
+  ],
+  "pushed_image_count": 10,
+  "pruned_image_count": 3
+}
