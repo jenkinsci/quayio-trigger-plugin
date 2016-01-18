@@ -31,10 +31,12 @@ public class PushEventNotification {
     private final JSONObject payload;
     private final String repository;
     private final List<String> tags = new ArrayList<String>();
+    private final String homepage;
     private final long received;
 
     public PushEventNotification(JSONObject payload) {
         this.payload = payload;
+        this.homepage = payload.getString("homepage");
         this.repository = payload.getString("repository");
         Iterator<String> it;
         try {
@@ -64,5 +66,9 @@ public class PushEventNotification {
 
     public List<String> getTags() {
         return tags;
+    }
+
+    public String getHomepage() {
+        return homepage;
     }
 }
