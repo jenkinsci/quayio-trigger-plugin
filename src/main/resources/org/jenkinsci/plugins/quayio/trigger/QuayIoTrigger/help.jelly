@@ -18,5 +18,5 @@
     <p>Trigger this job when <a href="https://quay.io">Quay.io</a> triggers a push event notification.</p>
 
     <p>In the Quay.io repository settings configure notification of type <em>POST Webhook</em> on
-    <em>Push to Repository</em> events with this URL: <strong>${app.rootUrl}/quayio-webhook/push</strong></p>
+    <em>Push to Repository</em> events with this URL: <strong>${app.rootUrl}quayio-webhook/push</strong></p>
 </j:jelly>
