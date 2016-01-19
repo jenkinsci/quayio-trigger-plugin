@@ -20,6 +20,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,10 +43,10 @@ public class QuayIoTriggerTest {
         project.addTrigger(new QuayIoTrigger(repositories));
         QuayIoTrigger trigger = QuayIoTrigger.getTrigger(project);
         assertThat(trigger).isNotNull();
-        assertThat(trigger.getRepositories()).containsExactly("foo/bar", "qux/baz");
+        assertThat(trigger.getRepositories()).containsOnlyElementsOf(Arrays.asList("foo/bar", "qux/baz"));
         project = (FreeStyleProject) j.configRoundtrip(project);
         trigger = QuayIoTrigger.getTrigger(project);
         assertThat(trigger).isNotNull();
-        assertThat(trigger.getRepositories()).containsExactly("foo/bar", "qux/baz");
+        assertThat(trigger.getRepositories()).containsOnlyElementsOf(Arrays.asList("foo/bar", "qux/baz"));
     }
 }
