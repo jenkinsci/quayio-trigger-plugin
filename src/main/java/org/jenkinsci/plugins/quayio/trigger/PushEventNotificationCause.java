@@ -44,7 +44,7 @@ public class PushEventNotificationCause extends Cause {
         @Override
         public String provideIcon(Cause cause) {
             if (cause instanceof PushEventNotificationCause) {
-                return "/plugin/quayio-notification/images/quay.png";
+                return "/plugin/quayio-trigger/images/quay.png";
             }
             return null;
         }
